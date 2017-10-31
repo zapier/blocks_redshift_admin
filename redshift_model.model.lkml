@@ -2,22 +2,22 @@
 # #
 # # Make sure this is a connection where the database user has sufficient permissions (per above link)
 
-connection: "demonew_events_ecommerce"
+connection: "redshift"
 case_sensitive: no
 
 include: "redshift_*.dashboard"
 include: "redshift_*.view"
 
 explore: redshift_data_loads {
-   hidden: yes
+   hidden: no
 }
 
 explore: redshift_db_space {
-  hidden: yes
+  hidden: no
 }
 
 explore: redshift_etl_errors {
-  hidden: yes
+  hidden: no
 }
 
 explore: redshift_tables {
