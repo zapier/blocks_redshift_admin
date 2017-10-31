@@ -9,15 +9,15 @@ include: "redshift_*.dashboard"
 include: "redshift_*.view"
 
 explore: redshift_data_loads {
-   hidden: no
+   hidden: yes
 }
 
 explore: redshift_db_space {
-  hidden: no
+  hidden: yes
 }
 
 explore: redshift_etl_errors {
-  hidden: no
+  hidden: yes
 }
 
 explore: redshift_tables {
