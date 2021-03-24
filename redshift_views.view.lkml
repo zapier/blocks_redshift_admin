@@ -121,7 +121,7 @@ view: redshift_data_loads {
       from stl_load_commits
        ;;
   }
-  
+
   dimension: root_bucket {
     type: string
     sql: ${TABLE}.root_bucket ;;
@@ -171,7 +171,9 @@ view: redshift_plan_steps {
   #description: "Steps from the query planner for recent queries to Redshift"
   derived_table: {
     # Insert into PDT because redshift won't allow joining certain system tables/views onto others (presumably because they are located only on the leader node)
-    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*23)/(60*60*24)) ;; #23h
+
+    # remove bellow sql trigger value: https://zapier.slack.com/archives/C43DUMF3P/p1616599550177100
+    # sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*23)/(60*60*24)) ;; #23h
     sql:
         SELECT
         query, nodeid, parentid,
@@ -198,8 +200,9 @@ view: redshift_plan_steps {
         AND query<=(SELECT max(query) FROM ${redshift_queries.SQL_TABLE_NAME})
     ;;
     #TODO?: Currently not extracting the sequential scan column, but I'm not sure if this is useful to extract. What's more useful as far as I can tell are the fields in the filter (operation argument)
-    distribution: "query"
-    sortkeys: ["query"]
+
+    #distribution: "query"
+    #sortkeys: ["query"]
   }
   dimension: query {
     sql: ${TABLE}.query;;
@@ -349,7 +352,9 @@ view: redshift_queries {
   # Recent is last 24 hours of queries
   # (we only see queries related to our rs user_id)
   derived_table: {
-    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*24)) ;; #22h
+
+    # remove bellow sql trigger value: https://zapier.slack.com/archives/C43DUMF3P/p1616599550177100
+    # sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*24)) ;; #22h
     sql: SELECT
         wlm.query,
         q.substring::varchar,
@@ -370,8 +375,8 @@ view: redshift_queries {
     ;;
     #STL_QUERY vs SVL_QLOG. STL_QUERY has more characters of query text (4000), but is only retained for "2 to 5 days"
     # STL_WLM_QUERY or SVL_QUERY_QUEUE_INFO? http://docs.aws.amazon.com/redshift/latest/dg/r_SVL_QUERY_QUEUE_INFO.html
-    distribution: "query"
-    sortkeys: ["query"]
+    # distribution: "query"
+    # sortkeys: ["query"]
   }
   dimension: query {
     type: number
@@ -500,11 +505,11 @@ view: redshift_slices {
   # Use the STV_SLICES table to view the current mapping of a slice to a node.
   # This table is visible to all users. Superusers can see all rows; regular users can see only their own data.
   derived_table: {
-    #sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*24)) ;; #22h
-    persist_for: "12 hours"
+    # sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*24)) ;; #22h
+    # persist_for: "12 hours"
     sql: SELECT slice,node FROM STV_SLICES;;
-    distribution_style: "all"
-    sortkeys: ["node"]
+    # distribution_style: "all"
+    # sortkeys: ["node"]
   }
   dimension: node{
     type: number
@@ -529,7 +534,7 @@ view: redshift_slices {
 view: redshift_tables {
   derived_table: {
     # Insert into PDT because redshift won't allow joining certain system tables/views onto others (presumably because they are located only on the leader node)
-    persist_for: "8 hours"
+    # persist_for: "8 hours"
     sql: select
         "database"::varchar,
         "schema"::varchar,
@@ -551,8 +556,8 @@ view: redshift_tables {
       from svv_table_info
     ;;
     # http://docs.aws.amazon.com/redshift/latest/dg/r_SVV_TABLE_INFO.html
-      distribution_style: all
-      indexes: ["table_id","table"] # "indexes" translates to an interleaved sort key for Redshift
+    #  distribution_style: all
+    #  indexes: ["table_id","table"] # "indexes" translates to an interleaved sort key for Redshift
     }
 
     # dimensions #
@@ -721,7 +726,9 @@ view: redshift_query_execution {
   #description: "Steps from the query planner for recent queries to Redshift"
   derived_table: {
     # Insert into PDT because redshift won't allow joining certain system tables/views onto others (presumably because they are located only on the leader node)
-    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*23)/(60*60*24)) ;; #23h
+
+    # remove bellow sql trigger value: https://zapier.slack.com/archives/C43DUMF3P/p1616599550177100
+    #sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*23)/(60*60*24)) ;; #23h
     sql:
         SELECT
           query ||'.'|| seg || '.' || step as id,
@@ -756,8 +763,8 @@ view: redshift_query_execution {
         AND query<=(SELECT max(query) FROM ${redshift_queries.SQL_TABLE_NAME})
         GROUP BY query, seg, step, label
       ;;
-      distribution: "query"
-      sortkeys: ["query"]
+      # distribution: "query"
+      # sortkeys: ["query"]
     }
   # or svl_query_report to not aggregate over slices under each step
   #using group by because sometimes steps are duplicated.seems to be when some slices are diskbased, others not
